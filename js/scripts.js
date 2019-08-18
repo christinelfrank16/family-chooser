@@ -1,12 +1,27 @@
+// References https://stackoverflow.com/questions/44704735/how-can-i-have-a-slot-machine-effect-using-jquery-and-css
+
 var results = [
-  'PK12345',
-  'IN32983',
-  'IH87632',
-  'LK65858',
-  'ND82389',
-  'QE01233'
+  'Christine',
+  'Ian',
+  'Adrianne',
+  'Sean',
+  'Katherine',
+  'Bob',
+  'Maureen'
 ];
 
+$(document).ready(function(){
+  results.forEach(el => {
+    console.log(el);
+    console.log($("<option></option>").val(el).html(el));
+    $("#name").after($("<option></option>").val(el).html(el));
+  });
+});
+
+
+function removeSelfAndSo(){
+  var user = $("#user-name").val().toLowerCase();
+}
 
 
 // Get a random symbol class
@@ -57,8 +72,8 @@ $(document).on("click", "#spin", function() {
       $('.wheel').html();
 
       $('.wheel').prepend('<div style="display: none;" class="new-link" name="link[]"><input type="text" value="' + getRandomIndex() + '" /></div>');
-//Using "first-of-type" rather than "last"
-$('.wheel').find(".new-link:first-of-type").slideDown("fast");
+      //Using "first-of-type" rather than "last"
+      $('.wheel').find(".new-link:first-of-type").slideDown("fast");
 
     }
 
