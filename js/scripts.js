@@ -1,28 +1,111 @@
 // References https://stackoverflow.com/questions/44704735/how-can-i-have-a-slot-machine-effect-using-jquery-and-css
 
 var results = [
-  'Christine',
-  'Ian',
-  'Adrianne',
-  'Sean',
-  'Katherine',
-  'Bob',
-  'Maureen'
+  'christine',
+  'ian',
+  'adrianne',
+  'sean',
+  'katherine',
+  'bob',
+  'maureen'
+];
+
+var groups = [
+  'christine:ian',
+  'adrianne:sean',
+  'katherine:bob',
+  'maureen'
 ];
 
 $(document).ready(function(){
+  // populate dropdown
   results.forEach(el => {
-    console.log(el);
-    console.log($("<option></option>").val(el).html(el));
-    $("#name").after($("<option></option>").val(el).html(el));
+    $("#name").after($("<option></option>").val(firstLetterToUpperCase(el)).html(firstLetterToUpperCase(el)));
   });
+
+  $("#user-info").submit(function(event){
+    event.preventDefault();
+    var user = $("#user-name").val().toLowerCase();
+    var selectionOptions;
+    if(user !== "0"){
+      var options = $("input:checkbox[name=add-options]:checked").toArray();
+      if(options.length > 0){
+        var optionValues = [];
+        options.forEach(el => optionValues.push(el.value));
+
+        if(optionValues.includes("sig-other")){
+          groups.forEach((current, index) => {
+            var tempSoArray = current.split(":");
+            // keep name values not in SO array on match
+            if(tempSoArray.includes(user)){
+              results = results.filter(name => !tempSoArray.includes(name));
+            }
+          });
+        } else {
+          removeSelf(user);
+        }
+
+        if(optionValues.includes("other")){
+          // splits on spaces, commas, semicolons
+
+        }
+        console.log(results);
+      }
+      else {
+        removeSelf(user);
+      }
+
+      console.log(results);
+
+    } else {
+      alert("Please select your name from the dropdown.");
+    }
+
+  });
+
+
 });
 
-
-function removeSelfAndSo(){
-  var user = $("#user-name").val().toLowerCase();
+function firstLetterToUpperCase(string){
+  var firstLetter = string.charAt(0).toUpperCase();
+  return firstLetter + string.slice(1);
 }
 
+function removeSelf(self){
+    results.forEach((current, index) => {
+      if(current === self){
+        results.splice(index, 1);
+      }
+    });
+}
+
+function showRemovalOptions(){
+  var optionsCheckBox = $("#add-options-1").prop("checked");
+  var user = $("#user-name").val().toLowerCase();
+  if(user !== "0"){
+    if(optionsCheckBox){
+      removeSelf(user);
+      results.forEach((name, index) => {
+        var markup =
+        `
+          <div class="form-check form-check-inline">
+            <input class="form-check-input" type="checkbox" name="removal-options" value="${firstLetterToUpperCase(name)}" id="removal-options-${index}">
+            <label class="form-check-label" for="add-options-${index}">${firstLetterToUpperCase(name)}</label>
+          </div>
+        `
+        $("#removal-options").append(markup);
+      });
+    }
+    else {
+      $("#removal-options").empty();
+    }
+  } else {
+    alert("Please select your name from the dropdown.");
+    $("#add-options-1").prop("checked", false);
+  }
+
+
+}
 
 // Get a random symbol class
 function getRandomIndex() {

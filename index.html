@@ -18,6 +18,19 @@
             <option id ="name" value="0">None Selected</option>
           </select>
         </div>
+        <h6>Select checkboxes below for <em><strong>removal</strong></em> criteria:</h6>
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" name="add-options" value="sig-other" id="add-options-0" checked>
+          <label class="form-check-label" for="add-options-0">Significant Other</label>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" name="add-options" value="other" id="add-options-1" onclick="showRemovalOptions()">
+          <label class="form-check-label" for="add-options-1">Other</label>
+        </div>
+        <div id="removal-options">
+
+        </div>
+        <button id="submit-btn" class="btn btn-primary" type="submit">Spin for Results!</button>
       </form>
     </div>
     <div id="wheels">
