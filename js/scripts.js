@@ -34,36 +34,26 @@ $(document).ready(function(){
         options.forEach(el => optionValues.push(el.value));
 
         if(optionValues.includes("sig-other")){
-          groups.forEach((current, index) => {
-            var tempSoArray = current.split(":");
-            // keep name values not in SO array on match
-            if(tempSoArray.includes(user)){
-              results = results.filter(name => !tempSoArray.includes(name));
-            }
-          });
+          removeGroupedNames(user);
         } else {
-          removeSelf(user);
+          removeName(user);
         }
 
         if(optionValues.includes("other")){
-          // splits on spaces, commas, semicolons
-
+          var namesToRemoveArr = $("input:checkbox[name=removal-options]:checked").toArray();
+          namesToRemoveArr.forEach(el => removeName(el.value.toLowerCase()));
         }
-        console.log(results);
       }
       else {
-        removeSelf(user);
+        removeName(user);
       }
 
-      console.log(results);
+      spinWheel();
 
     } else {
       alert("Please select your name from the dropdown.");
     }
-
   });
-
-
 });
 
 function firstLetterToUpperCase(string){
@@ -71,20 +61,37 @@ function firstLetterToUpperCase(string){
   return firstLetter + string.slice(1);
 }
 
-function removeSelf(self){
+function removeName(name){
     results.forEach((current, index) => {
-      if(current === self){
+      if(current === name){
         results.splice(index, 1);
       }
     });
 }
 
+function removeGroupedNames(name){
+  groups.forEach((current, index) => {
+    var tempSoArray = current.split(":");
+    // keep name values not in SO array on match
+    if(tempSoArray.includes(name)){
+      results = results.filter(resultName => !tempSoArray.includes(resultName));
+    }
+  });
+}
+
 function showRemovalOptions(){
+  var significantOther = $("#add-options-0").prop("checked");
   var optionsCheckBox = $("#add-options-1").prop("checked");
   var user = $("#user-name").val().toLowerCase();
+
   if(user !== "0"){
     if(optionsCheckBox){
-      removeSelf(user);
+      if(significantOther){
+        removeGroupedNames(user);
+      } else {
+        removeName(user);
+      }
+
       results.forEach((name, index) => {
         var markup =
         `
@@ -109,7 +116,9 @@ function showRemovalOptions(){
 
 // Get a random symbol class
 function getRandomIndex() {
-  return jQuery.rand(results);
+  var upperCaseResults = [];
+  results.forEach(el => upperCaseResults.push(firstLetterToUpperCase(el)));
+  return jQuery.rand(upperCaseResults);
 }
 
 (function($) {
@@ -125,14 +134,14 @@ function getRandomIndex() {
 })(jQuery);
 
 // Listen for "hold"-button clicks
-$(document).on("click", ".wheel button", function() {
-  var button = $(this);
-  button.toggleClass("active");
-  button.parent().toggleClass("hold");
-  button.blur(); // get rid of the focus
-});
+// $(document).on("click", ".wheel button", function() {
+//   var button = $(this);
+//   button.toggleClass("active");
+//   button.parent().toggleClass("hold");
+//   button.blur(); // get rid of the focus
+// });
 
-$(document).on("click", "#spin", function() {
+function spinWheel() {
   // get a plain array of symbol elements
   var symbols = $(".wheel").not(".hold").get();
 
@@ -171,7 +180,7 @@ $(document).on("click", "#spin", function() {
 
   // Start spinning
   setTimeout(update, 1);
-});
+}
 
 // set the wheels to random symbols when the page loads
 $(function() {
