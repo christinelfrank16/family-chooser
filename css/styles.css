@@ -1,14 +1,41 @@
+#wheels {
+  display: block;
+  width: 100%;
+  margin-top: 15px;
+}
 .wheel {
-  width: 25%;
-  float: left;
+  width: 100%;
   font-size: 20px;
   text-align: center;
   height: 34.4px;
   overflow: hidden;
 }
 
-.wheel .fa {
-  display: block;
-  font-size: 4em;
-  margin-bottom: 0.5em;
+.wheel input {
+  border-radius: 10px;
+}
+
+#name-input {
+  font-weight: 500;
+  font-size: 1rem;
+}
+
+header {
+  margin: 2rem 0;
+  padding: 8px;
+  border: 1px solid lightgrey;
+  border-radius: 10px;
+  background: white;
+}
+
+#removal-options {
+  text-align: center;
+}
+
+#submit-btn {
+  margin: 1rem 0;
+}
+
+body {
+  background: #d4fbff;
 }
