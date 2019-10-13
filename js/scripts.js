@@ -21,25 +21,42 @@ const groupsByIndex = [
   [2,3],
   [4,5]
 ];
+const nameAtIndex = [
+  'christine',
+  'ian',
+  'adrianne',
+  'sean',
+  'katherine',
+  'bob',
+  'maureen'
+];
 
 let allCombinations =[];
 let allGroupSets =[];
 let allowedMainGroupSets =[];
 
 $(document).ready(function(){
+
+  let currentOptions = localStorage.getItem("current");
+  if(!currentOptions || (currentOptions.length <= 1 || currentOptions =="[]")){
+    populateAllCombinations();
+    populateAllGroupSets();
+    removeUnallowedGroups();
+    currentOptions = allowedMainGroupSets;
+  }else{
+    currentOptions = JSON.parse(currentOptions);
+    allowedMainGroupSets = currentOptions;
+  }
+  console.log(allowedMainGroupSets, "begin sets");
   // populate dropdown
   results.forEach(el => {
     $("#name").after($("<option></option>").val(firstLetterToUpperCase(el)).html(firstLetterToUpperCase(el)));
   });
 
-  populateAllCombinations();
-  populateAllGroupSets();
-  removeUnallowedGroups();
-  console.log(allowedMainGroupSets, "temp1");
-
   $("#user-info").submit(function(event){
     event.preventDefault();
-    var user = $("#user-name").val().toLowerCase();
+    const user = $("#user-name").val().toLowerCase();
+    const userIndex = results.indexOf(user);
     var selectionOptions;
     if(user !== "0"){
       var options = $("input:checkbox[name=add-options]:checked").toArray();
@@ -55,20 +72,48 @@ $(document).ready(function(){
 
         if(optionValues.includes("other")){
           var namesToRemoveArr = $("input:checkbox[name=removal-options]:checked").toArray();
-          namesToRemoveArr.forEach(el => removeName(el.value.toLowerCase()));
+          namesToRemoveArr.forEach(el => {
+            removeName(el.value.toLowerCase());
+            removeSpecificReceiver(user, el);
+          });
         }
       }
       else {
         removeName(user);
       }
+      removeNamesIfNoRepresentativeIndex(userIndex);
 
-      spinWheel();
+      //spinWheel();
+      getSpinValue(user);
+
 
     } else {
       alert("Please select your name from the dropdown.");
     }
   });
 });
+
+function removeNamesIfNoRepresentativeIndex(userIndex){
+  results.forEach(receiver => {
+    let receiverIndex = results.indexOf(receiver);
+    let canReceive = false;
+    allowedMainGroupSets.forEach(groupSet => {
+      if(groupSet[userIndex][1] == receiverIndex){
+        canReceive = true;
+      }
+     });
+    if(!canReceive){
+      removeName(receiver)
+    }
+  });
+}
+
+async function getSpinValue(user){
+  let spinValue = await spinWheel();
+  removeChosenReceiver(user, spinValue);
+  console.log(allowedMainGroupSets, "end");
+  localStorage.setItem("current", JSON.stringify(allowedMainGroupSets));
+}
 
 function populateAllCombinations(){
   for(let i=0; i<results.length; i++){
@@ -129,11 +174,38 @@ function firstLetterToUpperCase(string){
 }
 
 function removeName(name){
-    results.forEach((current, index) => {
-      if(current === name){
-        results.splice(index, 1);
+  results.forEach((current, index) => {
+    if(current === name){
+      results.splice(index, 1);
+    }
+  });
+}
+
+function removeSpecificReceiver(user, receiver){
+  const userIndex = nameAtIndex.indexOf(user);
+  const receiverIndex = nameAtIndex.indexOf(receiver);
+  let tempArray = [];
+  allowedMainGroupSets.forEach(group => {
+    for(let i=0; i<group.length; i++){
+      if(group[i][0] != userIndex && group[i][1] == receiverIndex){
+        tempArray.push(group);
       }
-    });
+    }
+  });
+  tempArray = allowedMainGroupSets;
+}
+
+function removeChosenReceiver(user, receiver){
+    const userIndex = nameAtIndex.indexOf(user);
+  const receiverIndex = nameAtIndex.indexOf(receiver.toLowerCase());
+  let tempArray = [];
+  allowedMainGroupSets.forEach(group => {
+    if(group[userIndex][0] == userIndex && group[userIndex][1] == receiverIndex){
+      tempArray.push(group);
+    }
+  });
+  allowedMainGroupSets=tempArray;
+  console.log(allowedMainGroupSets);
 }
 
 function removeGroupedNames(name){
@@ -142,8 +214,23 @@ function removeGroupedNames(name){
     // keep name values not in SO array on match
     if(tempSoArray.includes(name)){
       results = results.filter(resultName => !tempSoArray.includes(resultName));
+      removeGroupedNameIndices(tempSoArray);
     }
   });
+}
+
+function removeGroupedNameIndices(soGroup){
+  const soIndex1 = nameAtIndex.indexOf(soGroup[0]);
+  const soIndex2 = nameAtIndex.indexOf(soGroup[1]);
+  let tempArray = [];
+  allowedMainGroupSets.forEach(group => {
+    for(let i=0; i<group.length; i++){
+      if((group[i][0] != soIndex1 && group[i][1] == soIndex2)&&(group[i][0] != soIndex2 && group[i][1] == soIndex1)){
+        tempArray.push(group);
+      }
+    }
+  });
+  tempArray = allowedMainGroupSets;
 }
 
 function showRemovalOptions(){
@@ -209,44 +296,47 @@ function getRandomIndex() {
 // });
 
 function spinWheel() {
-  // get a plain array of symbol elements
-  var symbols = $(".wheel").not(".hold").get();
+  return new Promise(resolve => {
+    // get a plain array of symbol elements
+    var symbols = $(".wheel").not(".hold").get();
 
-  if (symbols.length === 0) {
-    alert("All wheels are held; there's nothing to spin");
-    return; // stop here
-  }
-
-  var button = $(this);
-
-  // get rid of the focus, and disable the button
-  button.prop("disabled", true).blur();
-
-  // counter for the number of spins
-  var spins = 0;
-
-  // inner function to do the spinning
-  function update() {
-    for (var i = 0, l = symbols.length; i < l; i++) {
-      $('.wheel').html();
-
-      $('.wheel').prepend('<div style="display: none;" class="new-link" name="link[]"><input type="text" value="' + getRandomIndex() + '" /></div>');
-      //Using "first-of-type" rather than "last"
-      $('.wheel').find(".new-link:first-of-type").slideDown("fast");
-
+    if (symbols.length === 0) {
+      alert("All wheels are held; there's nothing to spin");
+      return; // stop here
     }
 
-    if (++spins < 50) {
-      // set a new, slightly longer interval for the next update. Makes it seem like the wheels are slowing down
-      setTimeout(update, 10 + spins * 2);
-    } else {
-      // re-enable the button
-      button.prop("disabled", false);
-    }
-  }
+    var button = $(this);
 
-  // Start spinning
-  setTimeout(update, 1);
+    // get rid of the focus, and disable the button
+    button.prop("disabled", true).blur();
+
+    // counter for the number of spins
+    var spins = 0;
+
+    // inner function to do the spinning
+    function update() {
+      for (var i = 0, l = symbols.length; i < l; i++) {
+        $('.wheel').html();
+
+        $('.wheel').prepend('<div style="display: none;" class="new-link" name="link[]"><input type="text" value="' + getRandomIndex() + '" /></div>');
+        //Using "first-of-type" rather than "last"
+        $('.wheel').find(".new-link:first-of-type").slideDown("fast");
+
+      }
+
+      if (++spins < 50) {
+        // set a new, slightly longer interval for the next update. Makes it seem like the wheels are slowing down
+        setTimeout(update, 10 + spins * 2);
+      } else {
+        // re-enable the button
+        button.prop("disabled", false);
+        resolve($('.wheel:first-child input').val());
+      }
+    }
+
+    // Start spinning
+    setTimeout(update, 1);
+  });
 }
 
 // set the wheels to random symbols when the page loads
