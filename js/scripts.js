@@ -1,6 +1,6 @@
 // References https://stackoverflow.com/questions/44704735/how-can-i-have-a-slot-machine-effect-using-jquery-and-css
 
-var results = [
+let results = [
   'christine',
   'ian',
   'adrianne',
@@ -10,18 +10,32 @@ var results = [
   'maureen'
 ];
 
-var groups = [
+const groups = [
   'christine:ian',
   'adrianne:sean',
   'katherine:bob',
   'maureen'
 ];
+const groupsByIndex = [
+  [0,1],
+  [2,3],
+  [4,5]
+];
+
+let allCombinations =[];
+let allGroupSets =[];
+let allowedMainGroupSets =[];
 
 $(document).ready(function(){
   // populate dropdown
   results.forEach(el => {
     $("#name").after($("<option></option>").val(firstLetterToUpperCase(el)).html(firstLetterToUpperCase(el)));
   });
+
+  populateAllCombinations();
+  populateAllGroupSets();
+  removeUnallowedGroups();
+  console.log(allowedMainGroupSets, "temp1");
 
   $("#user-info").submit(function(event){
     event.preventDefault();
@@ -56,8 +70,61 @@ $(document).ready(function(){
   });
 });
 
+function populateAllCombinations(){
+  for(let i=0; i<results.length; i++){
+    let group=[];
+    for(let j=0; j<results.length; j++){
+      if(i!=j){
+        let subgroup = [i,j];
+        group.push(subgroup);
+      }
+    }
+    allCombinations.push(group);
+  }
+}
+
+function populateAllGroupSets(){
+  let temp1 = allCombinations[0];
+  for(let i=1; i<allCombinations.length; i++){
+    let temp2 = [];
+    for(let j=0; j<temp1.length; j++){
+
+      // maintain 2-length array elements
+      let temp =[];
+      if(typeof temp1[j][0] == "number"){
+        temp.push(temp1[j]);
+      } else {
+        temp = temp.concat(temp1[j]);
+      }
+      for(let k=0; k<allCombinations[0].length; k++){
+        tempArray = [];
+        tempArray = tempArray.concat(temp);
+        tempArray.push(allCombinations[i][k]);
+        temp2.push(tempArray);
+      }
+    }
+    temp1=temp2;
+  }
+  allGroupSets = temp1;
+}
+
+function removeUnallowedGroups(){
+  // can not give to the same person twice
+  allGroupSets.forEach(group => {
+    let receivers = [];
+    for(let i=0; i<group.length; i++){
+      if(!receivers.includes(group[i][1])){
+        receivers.push(group[i][1]);
+      }
+    }
+    if(receivers.length == group.length){
+      allowedMainGroupSets.push(group);
+    }
+  });
+}
+
 function firstLetterToUpperCase(string){
-  var firstLetter = string.charAt(0).toUpperCase();
+  const firstLetter = string.charAt(0).toUpperCase();
   return firstLetter + string.slice(1);
 }
 
