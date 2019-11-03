@@ -18,6 +18,15 @@
 #removalSelection {
   text-align: center;
 }
+#reset {
+  text-align: center;
+}
+#resetbtn {
+  width: 200px;
+  margin-bottom: 20px;
+  font-weight: bold;
+  display: none;
+}
 
 #name-input {
   font-weight: 500;

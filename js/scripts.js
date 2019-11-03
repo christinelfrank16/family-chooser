@@ -38,12 +38,21 @@ let allowedMainGroupSets =[];
 $(document).ready(function(){
   let firstRoll = false;
   let currentOptions = localStorage.getItem("current");
-  if((!currentOptions || currentOptions === "[]") || (JSON.parse(currentOptions).length <= 1)){
+  let userList = localStorage.getItem("userList");
+  let userRolledList = userList ? JSON.parse(userList) : [];
+
+  if(!currentOptions || currentOptions === "[]"){
     populateAllCombinations();
     populateAllGroupSets();
     removeUnallowedGroups();
     currentOptions = allowedMainGroupSets;
+    userRolledList = [];
     firstRoll = true;
+    $("#resetbtn").hide();
+  } else if (userRolledList.length === 7){
+    $("#resetbtn").show();
+    currentOptions = JSON.parse(currentOptions);
+    allowedMainGroupSets = currentOptions;
   }else{
     currentOptions = JSON.parse(currentOptions);
     allowedMainGroupSets = currentOptions;
@@ -53,11 +62,13 @@ $(document).ready(function(){
     $("#name").after($("<option></option>").val(firstLetterToUpperCase(el)).html(firstLetterToUpperCase(el)));
   });
 
+  $("#resetbtn").click(function(){
+
+  });
+
   $("#user-info").submit(function(event){
     event.preventDefault();
-    console.log(allowedMainGroupSets, "begin spin sets");
     resetResultsArray();
-    console.log(results);
     const user = $("#user-name").val().toLowerCase();
     const userIndex = nameAtIndex.indexOf(user);
     var selectionOptions;
@@ -90,10 +101,13 @@ $(document).ready(function(){
         removeName(user);
 
       removeNamesIfNoRepresentativeIndex(userIndex);
-      console.log(results);
       //spinWheel();
       getSpinValue(user);
-
+      if(!userRolledList.includes(user))
+      {
+        userRolledList.push(user);
+      }
+      localStorage.setItem("userList", JSON.stringify(userRolledList));
 
     } else {
       alert("Please select your name from the dropdown.");
@@ -127,13 +141,11 @@ function removeNamesIfNoRepresentativeIndex(userIndex){
      });
   });
   results = tempResults;
-  console.log(results);
 }
 
 async function getSpinValue(user){
   let spinValue = await spinWheel();
   removeChosenReceiver(user, spinValue);
-  console.log(allowedMainGroupSets, "end");
   localStorage.setItem("current", JSON.stringify(allowedMainGroupSets));
 }
 
@@ -252,21 +264,15 @@ function removeAllSigOther(){
 function removeGroupedNameIndices(soGroup){
   const soIndex1 = nameAtIndex.indexOf(soGroup[0]);
   const soIndex2 = nameAtIndex.indexOf(soGroup[1]);
-  console.log("so1 " + soIndex1);
-  console.log("so2 " + soIndex2);
   let tempArray = [];
   allowedMainGroupSets.forEach(group => {
     const so1ReceiverIndex = group[soIndex1][1];
     const so2ReceiverIndex = group[soIndex2][1];
     if(so1ReceiverIndex !== soIndex2 && so2ReceiverIndex !== soIndex1){
-      if(soIndex1 == 0 && (so2ReceiverIndex == 1 || so1ReceiverIndex == 0)){
-        console.log(">>>>>>>> WHAT? ");
-        console.log(group);
-      }
       tempArray.push(group);
     }
   });
-  tempArray = allowedMainGroupSets;
+allowedMainGroupSets = tempArray;
 }
 
 function showRemovalOptions(){
