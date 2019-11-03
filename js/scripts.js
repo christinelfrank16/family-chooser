@@ -38,7 +38,7 @@ let allowedMainGroupSets =[];
 $(document).ready(function(){
   let firstRoll = false;
   let currentOptions = localStorage.getItem("current");
-  if(!currentOptions || (currentOptions.length <= 1 || currentOptions =="[]")){
+  if((!currentOptions || currentOptions === "[]") || (JSON.parse(currentOptions).length <= 1)){
     populateAllCombinations();
     populateAllGroupSets();
     removeUnallowedGroups();
@@ -63,7 +63,8 @@ $(document).ready(function(){
     var selectionOptions;
     if(user !== "0"){
       var options = $("input:checkbox[name=add-options]:checked").toArray();
-      if(firstRoll == true){
+      if(firstRoll === true){
+        firstRoll = false;
         if(options.length > 0){
           var optionValues = [];
           options.forEach(el => optionValues.push(el.value));
@@ -113,18 +114,20 @@ function resetResultsArray(){
 }
 
 function removeNamesIfNoRepresentativeIndex(userIndex){
+  let tempResults = [];
   results.forEach(receiver => {
     let receiverIndex = nameAtIndex.indexOf(receiver.toLowerCase());
     let canReceive = false;
     allowedMainGroupSets.forEach(groupSet => {
       if(groupSet[userIndex] && groupSet[userIndex][1] == receiverIndex){
-        canReceive = true;
+        if(!tempResults.includes(receiver)){
+          tempResults.push(receiver);
+        }
       }
      });
-    if(!canReceive){
-      removeName(receiver)
-    }
   });
+  results = tempResults;
+  console.log(results);
 }
 
 async function getSpinValue(user){
@@ -224,7 +227,6 @@ function removeChosenReceiver(user, receiver){
     }
   });
   allowedMainGroupSets=tempArray;
-  console.log(allowedMainGroupSets);
 }
 
 function removeGroupedNames(name){
@@ -241,19 +243,27 @@ function removeGroupedNames(name){
 function removeAllSigOther(){
   groups.forEach((current) => {
     var tempSoArray = current.split(":");
-    removeGroupedNameIndices(tempSoArray);
+    if(tempSoArray.length > 1){
+      removeGroupedNameIndices(tempSoArray);
+    }
   });
 }
 
 function removeGroupedNameIndices(soGroup){
   const soIndex1 = nameAtIndex.indexOf(soGroup[0]);
   const soIndex2 = nameAtIndex.indexOf(soGroup[1]);
+  console.log("so1 " + soIndex1);
+  console.log("so2 " + soIndex2);
   let tempArray = [];
   allowedMainGroupSets.forEach(group => {
-    for(let i=0; i<group.length; i++){
-      if((group[i][0] != soIndex1 && group[i][1] == soIndex2)&&(group[i][0] != soIndex2 && group[i][1] == soIndex1)){
-        tempArray.push(group);
+    const so1ReceiverIndex = group[soIndex1][1];
+    const so2ReceiverIndex = group[soIndex2][1];
+    if(so1ReceiverIndex !== soIndex2 && so2ReceiverIndex !== soIndex1){
+      if(soIndex1 == 0 && (so2ReceiverIndex == 1 || so1ReceiverIndex == 0)){
+        console.log(">>>>>>>> WHAT? ");
+        console.log(group);
       }
+      tempArray.push(group);
     }
   });
   tempArray = allowedMainGroupSets;
