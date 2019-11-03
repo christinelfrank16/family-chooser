@@ -36,18 +36,18 @@ let allGroupSets =[];
 let allowedMainGroupSets =[];
 
 $(document).ready(function(){
-
+  let firstRoll = false;
   let currentOptions = localStorage.getItem("current");
   if(!currentOptions || (currentOptions.length <= 1 || currentOptions =="[]")){
     populateAllCombinations();
     populateAllGroupSets();
     removeUnallowedGroups();
     currentOptions = allowedMainGroupSets;
+    firstRoll = true;
   }else{
     currentOptions = JSON.parse(currentOptions);
     allowedMainGroupSets = currentOptions;
   }
-  console.log(allowedMainGroupSets, "begin sets");
   // populate dropdown
   results.forEach(el => {
     $("#name").after($("<option></option>").val(firstLetterToUpperCase(el)).html(firstLetterToUpperCase(el)));
@@ -55,34 +55,41 @@ $(document).ready(function(){
 
   $("#user-info").submit(function(event){
     event.preventDefault();
+    console.log(allowedMainGroupSets, "begin spin sets");
+    resetResultsArray();
+    console.log(results);
     const user = $("#user-name").val().toLowerCase();
-    const userIndex = results.indexOf(user);
+    const userIndex = nameAtIndex.indexOf(user);
     var selectionOptions;
     if(user !== "0"){
       var options = $("input:checkbox[name=add-options]:checked").toArray();
-      if(options.length > 0){
-        var optionValues = [];
-        options.forEach(el => optionValues.push(el.value));
+      if(firstRoll == true){
+        if(options.length > 0){
+          var optionValues = [];
+          options.forEach(el => optionValues.push(el.value));
 
-        if(optionValues.includes("sig-other")){
-          removeGroupedNames(user);
-        } else {
-          removeName(user);
-        }
+          if(optionValues.includes("sig-other")){
+            removeAllSigOther();
+            removeGroupedNames(user);
+          }
 
-        if(optionValues.includes("other")){
-          var namesToRemoveArr = $("input:checkbox[name=removal-options]:checked").toArray();
-          namesToRemoveArr.forEach(el => {
-            removeName(el.value.toLowerCase());
-            removeSpecificReceiver(user, el);
-          });
+          // TODO: Currently breaks logic when dynamically removing options
+          //       Need to find a way to fix this.. If there is one
+
+          // if(optionValues.includes("other")){
+          //   var namesToRemoveArr = $("input:checkbox[name=removal-options]:checked").toArray();
+          //   namesToRemoveArr.forEach(el => {
+          //     removeName(el.value.toLowerCase());
+          //     removeSpecificReceiver(user, el);
+          //   });
+          // }
         }
       }
-      else {
+
         removeName(user);
-      }
-      removeNamesIfNoRepresentativeIndex(userIndex);
 
+      removeNamesIfNoRepresentativeIndex(userIndex);
+      console.log(results);
       //spinWheel();
       getSpinValue(user);
 
@@ -93,12 +100,24 @@ $(document).ready(function(){
   });
 });
 
+function resetResultsArray(){
+  results = [
+    'christine',
+    'ian',
+    'adrianne',
+    'sean',
+    'katherine',
+    'bob',
+    'maureen'
+  ];
+}
+
 function removeNamesIfNoRepresentativeIndex(userIndex){
   results.forEach(receiver => {
-    let receiverIndex = results.indexOf(receiver);
+    let receiverIndex = nameAtIndex.indexOf(receiver.toLowerCase());
     let canReceive = false;
     allowedMainGroupSets.forEach(groupSet => {
-      if(groupSet[userIndex][1] == receiverIndex){
+      if(groupSet[userIndex] && groupSet[userIndex][1] == receiverIndex){
         canReceive = true;
       }
      });
@@ -182,8 +201,8 @@ function removeName(name){
 }
 
 function removeSpecificReceiver(user, receiver){
-  const userIndex = nameAtIndex.indexOf(user);
-  const receiverIndex = nameAtIndex.indexOf(receiver);
+  const userIndex = nameAtIndex.indexOf(user.toLowerCase());
+  const receiverIndex = nameAtIndex.indexOf(receiver.toLowerCase());
   let tempArray = [];
   allowedMainGroupSets.forEach(group => {
     for(let i=0; i<group.length; i++){
@@ -196,7 +215,7 @@ function removeSpecificReceiver(user, receiver){
 }
 
 function removeChosenReceiver(user, receiver){
-    const userIndex = nameAtIndex.indexOf(user);
+    const userIndex = nameAtIndex.indexOf(user.toLowerCase());
   const receiverIndex = nameAtIndex.indexOf(receiver.toLowerCase());
   let tempArray = [];
   allowedMainGroupSets.forEach(group => {
@@ -214,8 +233,15 @@ function removeGroupedNames(name){
     // keep name values not in SO array on match
     if(tempSoArray.includes(name)){
       results = results.filter(resultName => !tempSoArray.includes(resultName));
-      removeGroupedNameIndices(tempSoArray);
+      //removeGroupedNameIndices(tempSoArray);
     }
+  });
+}
+
+function removeAllSigOther(){
+  groups.forEach((current) => {
+    var tempSoArray = current.split(":");
+    removeGroupedNameIndices(tempSoArray);
   });
 }
 
